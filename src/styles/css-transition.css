@@ -1,0 +1,16 @@
+.enter,
+.exit.exit-active,
+.exit-done {
+  font-size: initial;
+}
+
+.enter.enter-active,
+.enter-done,
+.exit {
+  font-size: 32pt;
+}
+
+.enter.enter-active,
+.exit.exit-active {
+  transition: font-size 1s linear;
+}
