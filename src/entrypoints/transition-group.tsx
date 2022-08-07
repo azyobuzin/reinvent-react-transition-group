@@ -13,7 +13,7 @@ const Item: FC<ItemProps> = ({ name, state, onDelete }) => {
   return (
     <li>
       {`(${state}) ${name} `}
-      <button onClick={onDelete}>Delete</button>
+      {state.includes("enter") && <button onClick={onDelete}>Delete</button>}
     </li>
   );
 };
