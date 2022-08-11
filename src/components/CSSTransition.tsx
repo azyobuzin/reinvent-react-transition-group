@@ -30,9 +30,9 @@ export const CSSTransition: FC<CSSTransitionProps> = ({
   ...rest
 }) => {
   // 適用するクラス
-  const [transitionClassName, setTransitionClassName] = useState(
-    rest.in ? [classNames.enterDone] : [classNames.exitDone]
-  );
+  const [transitionClassName, setTransitionClassName] = useState<
+    (string | undefined)[]
+  >([]);
 
   // イベントハンドラ
   const eventHandlers = {
