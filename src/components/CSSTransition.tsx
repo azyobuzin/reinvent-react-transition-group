@@ -1,15 +1,17 @@
 import { FC, ReactElement, ReactNode, cloneElement, useState } from "react";
 import { Transition, TransitionProps, TransitionStatus } from "./Transition";
 
+interface ClassNames {
+  enter?: string;
+  enterActive?: string;
+  enterDone?: string;
+  exit?: string;
+  exitActive?: string;
+  exitDone?: string;
+}
+
 export interface CSSTransitionProps extends Omit<TransitionProps, "children"> {
-  classNames: {
-    enter?: string;
-    enterActive?: string;
-    enterDone?: string;
-    exit?: string;
-    exitActive?: string;
-    exitDone?: string;
-  };
+  classNames?: ClassNames | string;
 
   // className を適用する必要があるので、子はひとつの Element とする
   children?:
@@ -19,7 +21,7 @@ export interface CSSTransitionProps extends Omit<TransitionProps, "children"> {
 }
 
 export const CSSTransition: FC<CSSTransitionProps> = ({
-  classNames,
+  classNames = "",
   children,
   onEnter,
   onEntering,
@@ -34,30 +36,45 @@ export const CSSTransition: FC<CSSTransitionProps> = ({
     (string | undefined)[]
   >([]);
 
+  let classNamesObj: ClassNames;
+  if (typeof classNames === "string") {
+    const prefix = classNames ? classNames + "-" : "";
+    classNamesObj = {
+      enter: prefix + "enter",
+      enterActive: prefix + "enter-active",
+      enterDone: prefix + "enter-done",
+      exit: prefix + "exit",
+      exitActive: prefix + "exit-active",
+      exitDone: prefix + "exit-done",
+    };
+  } else {
+    classNamesObj = classNames;
+  }
+
   // イベントハンドラ
   const eventHandlers = {
     onEnter(): void {
-      setTransitionClassName([classNames.enter]);
+      setTransitionClassName([classNamesObj.enter]);
       if (onEnter) onEnter();
     },
     onEntering(): void {
-      setTransitionClassName([classNames.enter, classNames.enterActive]);
+      setTransitionClassName([classNamesObj.enter, classNamesObj.enterActive]);
       if (onEntering) onEntering();
     },
     onEntered(): void {
-      setTransitionClassName([classNames.enterDone]);
+      setTransitionClassName([classNamesObj.enterDone]);
       if (onEntered) onEntered();
     },
     onExit(): void {
-      setTransitionClassName([classNames.exit]);
+      setTransitionClassName([classNamesObj.exit]);
       if (onExit) onExit();
     },
     onExiting(): void {
-      setTransitionClassName([classNames.exit, classNames.exitActive]);
+      setTransitionClassName([classNamesObj.exit, classNamesObj.exitActive]);
       if (onExiting) onExiting();
     },
     onExited(): void {
-      setTransitionClassName([classNames.exitDone]);
+      setTransitionClassName([classNamesObj.exitDone]);
       if (onExited) onExited();
     },
   };
