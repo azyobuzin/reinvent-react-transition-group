@@ -44,7 +44,6 @@ export const Transition: FC<TransitionProps> = (props) => {
 
   // TransitionGroup 内で作成された Transition は entering から開始する
   const enterOnMount = useContext(TransitionGroupContext)?.isMounting === false;
-  console.log(enterOnMount);
 
   const [state, setState] = useState<InternalState>({
     status: isIn ? (enterOnMount ? "entering" : "entered") : "exited",

@@ -1,8 +1,17 @@
 import { FC, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Transition } from "../components/Transition";
+import { CSSTransition } from "react-transition-group";
 
-const TransitionApp: FC = () => {
+const classNames = {
+  enter: "enter",
+  enterActive: "enter-active",
+  enterDone: "enter-done",
+  exit: "exit",
+  exitActive: "exit-active",
+  exitDone: "exit-done",
+};
+
+const CSSTransitionApp: FC = () => {
   const [isIn, setIn] = useState(false);
   return (
     <div>
@@ -17,15 +26,15 @@ const TransitionApp: FC = () => {
         </label>
       </p>
 
-      <Transition in={isIn} timeout={1000}>
+      <CSSTransition classNames={classNames} in={isIn} timeout={1000}>
         {(state) => <p>{state}</p>}
-      </Transition>
+      </CSSTransition>
     </div>
   );
 };
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <TransitionApp />
+    <CSSTransitionApp />
   </StrictMode>
 );

@@ -1,7 +1,7 @@
 import { FC, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Transition } from "../components/Transition";
-import { TransitionGroup } from "../components/TransitionGroup";
+import { Transition } from "../../components/Transition";
+import { TransitionGroup } from "../../components/TransitionGroup";
 
 interface ItemProps {
   name: string;
