@@ -1,4 +1,11 @@
-import { FC, ReactNode, useContext, useEffect, useState } from "react";
+import {
+  FC,
+  ReactNode,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import { TransitionGroupContext } from "../contexts/TransitionGroupContext";
 
 // eslint-disable-next-line @typescript-eslint/sort-type-union-intersection-members
@@ -46,57 +53,49 @@ export const Transition: FC<TransitionProps> = (props) => {
   const enterOnMount = useContext(TransitionGroupContext)?.isMounting === false;
 
   const [state, setState] = useState<InternalState>({
-    status: isIn ? (enterOnMount ? "entering" : "entered") : "exited",
+    status: isIn && !enterOnMount ? "entered" : "exited",
     emitted: true,
   });
 
-  // 前回レンダーしたときの in の値
-  const [prevIn, setPrevIn] = useState(isIn && !enterOnMount);
+  // 次の状態。変化しないなら null
+  const nextStatus =
+    isIn && state.status.includes("exit")
+      ? "entering"
+      : !isIn && state.status.includes("enter")
+      ? "exiting"
+      : null;
 
   // in が変化したならば、状態遷移を開始する
-  useEffect(() => {
-    if (isIn !== prevIn) {
-      setPrevIn(isIn);
+  useLayoutEffect(() => {
+    if (nextStatus == null) return;
 
-      if (isIn) {
-        // enter
+    // 前回の遷移をキャンセル
+    if (state.timeoutID != null) clearTimeout(state.timeoutID);
 
-        // exiting ならばキャンセル
-        if (state.timeoutID != null) clearTimeout(state.timeoutID);
+    // 遷移前イベントを発生
+    const eventHandler =
+      nextStatus === "entering" ? props.onEnter : props.onExit;
+    if (eventHandler) eventHandler();
 
-        // 遷移開始
-        if (props.onEnter) props.onEnter();
-        setState({
-          status: "entering",
-          emitted: false,
-          timeoutID: setTimeout(
-            () => setState({ status: "entered", emitted: false }),
-            props.timeout
-          ),
-        });
-      } else {
-        // exit
-
-        // entering ならばキャンセル
-        if (state.timeoutID != null) clearTimeout(state.timeoutID);
-
-        // 遷移開始
-        if (props.onExit) props.onExit();
-        setState({
-          status: "exiting",
-          emitted: false,
-          timeoutID: setTimeout(
-            () => setState({ status: "exited", emitted: false }),
-            props.timeout
-          ),
-        });
-      }
-    }
-  }, [isIn, prevIn, state]);
+    // 遷移開始
+    setState({
+      status: nextStatus,
+      emitted: false,
+      timeoutID: setTimeout(
+        () =>
+          setState({
+            status: nextStatus === "entering" ? "entered" : "exited",
+            emitted: false,
+          }),
+        props.timeout
+      ),
+    });
+  }, [state, isIn]);
 
   // 遷移後のレンダリングが終わったらイベントを発生する
   useEffect(() => {
-    if (state.emitted) return;
+    // すでにイベント発生済みか、別の遷移が開始されたなら何もしない
+    if (state.emitted || nextStatus) return;
 
     const eventHandler = {
       entering: props.onEntering,
@@ -108,7 +107,7 @@ export const Transition: FC<TransitionProps> = (props) => {
     if (eventHandler) eventHandler();
 
     setState({ ...state, emitted: true });
-  }, [state]);
+  }, [state, nextStatus]);
 
   return (
     <>
