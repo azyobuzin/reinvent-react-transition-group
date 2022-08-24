@@ -1,8 +1,10 @@
 import {
+  Children,
   FC,
   Key,
   PropsWithChildren,
   ReactElement,
+  ReactNode,
   cloneElement,
   isValidElement,
   useEffect,
@@ -23,17 +25,20 @@ export const TransitionGroup: FC<PropsWithChildren> = ({ children }) => {
   // eslint-disable-next-line prefer-const
   let [currentChildren, setCurrentChildren] = useState<ReactElement[]>([]);
 
-  const [prevChildrenProp, setPrevChildrenProp] = useState<unknown>();
+  // 前回の children プロパティ
+  const [prevChildrenProp, setPrevChildrenProp] = useState<
+    ReactNode | undefined
+  >();
 
-  // children が変更されたら再計算する
+  // children が変更されたときだけ再計算する（無限ループを防ぐ）
   if (prevChildrenProp !== children) {
     // key が設定された Element 以外は無視
-    const nextChildren: ReactElement[] = (
-      children == null ? [] : Array.isArray(children) ? children : [children]
-    ).filter((x) => isValidElement(x) && x.key != null);
+    const nextChildren = Children.toArray(children).filter(
+      (x) => isValidElement(x) && x.key != null
+    ) as ReactElement[];
 
     // 削除ハンドラー
-    const handleDeleteChild = (key: Key): void => {
+    const deleteChild = (key: Key): void => {
       setCurrentChildren((currentChildren) =>
         currentChildren.filter((x) => x.key !== key)
       );
@@ -42,7 +47,7 @@ export const TransitionGroup: FC<PropsWithChildren> = ({ children }) => {
     currentChildren = calculateNewChildren(
       currentChildren,
       nextChildren,
-      handleDeleteChild
+      deleteChild
     );
 
     setPrevChildrenProp(children);
@@ -60,7 +65,7 @@ export const TransitionGroup: FC<PropsWithChildren> = ({ children }) => {
 function calculateNewChildren(
   currentChildren: ReactElement[],
   nextChildren: ReactElement[],
-  onDeleteChild: (key: Key) => void
+  deleteChild: (key: Key) => void
 ): ReactElement[] {
   const currentKeySet = new Set(currentChildren.map((x) => x.key));
   const nextKeySet = new Set(nextChildren.map((x) => x.key));
@@ -77,7 +82,7 @@ function calculateNewChildren(
       if (!nextKeySet.has(currentChild.key)) {
         // 削除
         const key = currentChild.key!;
-        const onExited = (): void => onDeleteChild(key);
+        const onExited = (): void => deleteChild(key);
         newChildren.push(cloneElement(currentChild, { in: false, onExited }));
         currentIndex++;
         continue;
